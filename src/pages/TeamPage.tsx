@@ -16,6 +16,7 @@ interface ScheduleData {
 }
 
 export interface Game {
+  gameId: string;
   gameNumber: string;
   date: string;
   time: string;
@@ -28,6 +29,7 @@ export interface Game {
   homeGoals: string;
   type: string;
   scoresheetUrl: string | null;
+  hasScoresheet: boolean;
 }
 
 export default function TeamPage() {
@@ -46,21 +48,13 @@ export default function TeamPage() {
     setLoading(true);
     setError(null);
 
-    const apiUrl = `/api/schedule?team=${teamId}&season=${season}&league=${league}`;
-
-    fetch(apiUrl)
+    fetch(`/api/schedule?team=${teamId}&season=${season}&league=${league}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Error ${res.status}`);
         return res.json();
       })
-      .then((json) => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .then((json) => { setData(json); setLoading(false); })
+      .catch((err) => { setError(err.message); setLoading(false); });
   }, [teamId, season, league]);
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
@@ -71,22 +65,22 @@ export default function TeamPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950 text-white w-full overflow-x-hidden">
       {/* Header */}
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
+      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4 w-full">
         <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <Link to="/" className="text-gray-400 hover:text-white transition-colors text-sm">
+          <Link to="/" className="text-gray-400 hover:text-white transition-colors text-sm shrink-0">
             ← Back
           </Link>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🏒</span>
-              <h1 className="text-xl font-bold">
+              <span className="text-xl shrink-0">🏒</span>
+              <h1 className="text-lg font-bold truncate">
                 {loading ? `Team ${teamId}` : (data?.teamName || `Team ${teamId}`)}
               </h1>
             </div>
             {data && (
-              <p className="text-gray-400 text-sm mt-0.5">
+              <p className="text-gray-400 text-sm mt-0.5 truncate">
                 {data.games[0]?.level} · {data.games[0]?.league}
               </p>
             )}
@@ -94,32 +88,34 @@ export default function TeamPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-gray-900 border-b border-gray-800 px-4">
-        <div className="max-w-5xl mx-auto flex gap-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              {tab.label}
-              {tab.count !== undefined && (
-                <span className="ml-1.5 text-xs bg-gray-700 text-gray-300 rounded-full px-1.5 py-0.5">
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
+      {/* Tabs — scrollable on mobile */}
+      <div className="bg-gray-900 border-b border-gray-800 w-full">
+        <div className="max-w-5xl mx-auto overflow-x-auto">
+          <div className="flex px-4 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab.key
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                {tab.label}
+                {tab.count !== undefined && (
+                  <span className="ml-1.5 text-xs bg-gray-700 text-gray-300 rounded-full px-1.5 py-0.5">
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-6 w-full">
         {loading && (
           <div className="flex items-center justify-center py-20 text-gray-400">
             <div className="text-center">
@@ -137,9 +133,15 @@ export default function TeamPage() {
 
         {data && !loading && (
           <>
-            {activeTab === 'schedule' && <ScheduleTable games={data.games} teamName={data.teamName} />}
-            {activeTab === 'players' && <PlayerStats players={data.players} />}
-            {activeTab === 'goalies' && <GoalieStats goalies={data.goalies} />}
+            {activeTab === 'schedule' && (
+              <ScheduleTable games={data.games} teamName={data.teamName} teamId={teamId!} />
+            )}
+            {activeTab === 'players' && (
+              <PlayerStats players={data.players} teamId={teamId!} />
+            )}
+            {activeTab === 'goalies' && (
+              <GoalieStats goalies={data.goalies} teamId={teamId!} />
+            )}
             {activeTab === 'team' && <TeamStats stats={data.teamStats} />}
           </>
         )}
