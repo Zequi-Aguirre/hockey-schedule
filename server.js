@@ -96,7 +96,6 @@ function parseSchedule($) {
   const players = [];
   const goalies = [];
   const teamStats = {};
-  let teamName = '';
 
   $('table').each((_, table) => {
     const rows = $(table).find('tr');
@@ -110,8 +109,6 @@ function parseSchedule($) {
 
         const awayTeam = clean($(cells[6]).text());
         const homeTeam = clean($(cells[8]).text());
-        const boldTeam = clean($(cells[6]).find('b').text()) || clean($(cells[8]).find('b').text());
-        if (boldTeam && !teamName) teamName = boldTeam;
 
         const gameId = $(cells[0]).find('a').attr('href')?.match(/game_id=(\d+)/)?.[1]
           || clean($(cells[0]).text()).replace('*', '');
@@ -176,6 +173,14 @@ function parseSchedule($) {
       });
     }
   });
+
+  // The target team appears in every game (home or away); opponents appear only once or twice
+  const nameCounts = {};
+  games.forEach(g => {
+    if (g.awayTeam) nameCounts[g.awayTeam] = (nameCounts[g.awayTeam] || 0) + 1;
+    if (g.homeTeam) nameCounts[g.homeTeam] = (nameCounts[g.homeTeam] || 0) + 1;
+  });
+  const teamName = Object.entries(nameCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
 
   return { teamName, games, players, goalies, teamStats };
 }
