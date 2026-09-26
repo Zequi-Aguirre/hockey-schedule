@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const LEAGUES = [
-  { id: '1', name: 'Panther Ice Hockey (Adult)' },
-  { id: '4', name: 'Panther Ice Hockey (Youth)' },
+  { id: '1', name: 'Adult (League 1)' },
+  { id: '4', name: 'BH Adult (League 4)' },
 ];
 
 interface Team {
@@ -54,9 +54,12 @@ export default function HomePage() {
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="text-5xl mb-4">🏒</div>
-          <h1 className="text-3xl font-bold text-white mb-2">Panthers Hockey</h1>
-          <p className="text-gray-400">Browse teams or enter a team ID directly</p>
+          <img src="/hookers-logo.png" alt="Pompano Beach Hookers" className="w-20 h-20 rounded-xl mx-auto mb-4 ring-2 ring-brand-gold/40" />
+          <h1 className="text-3xl font-bold text-white mb-2">Browse Teams</h1>
+          <p className="text-gray-400">Find a team or enter a team ID directly</p>
+          <Link to="/" className="inline-block mt-3 text-sm text-brand-gold hover:text-brand-columbia transition-colors">
+            ← Back to Pompano Beach Hookers
+          </Link>
         </div>
 
         {/* League selector */}

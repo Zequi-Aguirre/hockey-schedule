@@ -4,6 +4,7 @@ import ScheduleTable from '../components/ScheduleTable';
 import PlayerStats from '../components/PlayerStats';
 import GoalieStats from '../components/GoalieStats';
 import TeamStats from '../components/TeamStats';
+import { getBrandByTeamId } from '../brand';
 
 type Tab = 'schedule' | 'players' | 'goalies' | 'team';
 
@@ -40,8 +41,9 @@ export default function TeamPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('schedule');
 
-  const season = searchParams.get('season') || '17';
-  const league = searchParams.get('league') || '1';
+  const brand = getBrandByTeamId(teamId);
+  const season = searchParams.get('season') || brand?.season || '17';
+  const league = searchParams.get('league') || brand?.league || '1';
 
   useEffect(() => {
     if (!teamId) return;
@@ -67,22 +69,36 @@ export default function TeamPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white w-full overflow-x-hidden">
       {/* Header */}
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4 w-full">
+      <div className="bg-brand-navy border-b-4 border-brand-gold px-4 py-4 w-full">
         <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <Link to="/" className="text-gray-400 hover:text-white transition-colors text-sm shrink-0">
-            ← Back
-          </Link>
+          {brand ? (
+            <img
+              src={brand.logo}
+              alt={brand.name}
+              className="w-12 h-12 rounded-lg shrink-0 object-cover ring-2 ring-brand-gold/40"
+            />
+          ) : (
+            <Link to="/browse" className="text-brand-columbia hover:text-white transition-colors text-sm shrink-0">
+              ← Back
+            </Link>
+          )}
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xl shrink-0">🏒</span>
+              {!brand && <span className="text-xl shrink-0">🏒</span>}
               <h1 className="text-lg font-bold truncate">
-                {loading ? `Team ${teamId}` : (data?.teamName || `Team ${teamId}`)}
+                {brand ? brand.name : (loading ? `Team ${teamId}` : (data?.teamName || `Team ${teamId}`))}
               </h1>
             </div>
-            {data && (
-              <p className="text-gray-400 text-sm mt-0.5 truncate">
-                {data.games[0]?.level} · {data.games[0]?.league}
+            {brand ? (
+              <p className="text-brand-columbia text-sm mt-0.5 truncate">
+                {data?.games[0] ? `${data.games[0].level} · ${data.games[0].league}` : brand.tagline}
               </p>
+            ) : (
+              data && (
+                <p className="text-gray-400 text-sm mt-0.5 truncate">
+                  {data.games[0]?.level} · {data.games[0]?.league}
+                </p>
+              )
             )}
           </div>
         </div>
@@ -98,7 +114,7 @@ export default function TeamPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === tab.key
-                    ? 'border-blue-500 text-blue-400'
+                    ? 'border-brand-gold text-brand-gold'
                     : 'border-transparent text-gray-400 hover:text-gray-200'
                 }`}
               >
