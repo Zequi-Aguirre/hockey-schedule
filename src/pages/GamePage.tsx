@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { getTeamTheme } from '../brand';
 
 interface ScoreRow { side: string; team: string; p1: string; p2: string; p3: string; ot: string; so: string; final: string; }
 interface ScoringRow { per: string; time: string; type: string; team: string; goal: string; ass1: string; ass2: string; }
@@ -30,14 +31,15 @@ export default function GamePage() {
       .catch((err) => { console.error('game fetch error:', err); setError(err.message); setLoading(false); });
   }, [gameId]);
 
+  const theme = getTeamTheme(teamId);
   const teamNames = (data?.score ?? []).map(s => s.team).filter(Boolean);
   const subtitle = teamNames.length >= 2 ? `${teamNames[0]} vs ${teamNames[1]}` : '';
 
   return (
     <div className="min-h-screen bg-gray-950 text-white w-full overflow-x-hidden">
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
+      <div className={`${theme.headerClass} px-4 py-4`}>
         <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <Link to={`/${teamId}`} className="text-gray-400 hover:text-white text-sm shrink-0">← Back</Link>
+          <Link to={`/${teamId}`} className={`${theme.subtitleClass} hover:text-white text-sm shrink-0`}>← Back</Link>
           <div className="min-w-0 flex-1">
             <h1 className="text-lg font-bold">Game #{gameId}</h1>
             {subtitle && <p className="text-gray-400 text-sm truncate">{subtitle}</p>}

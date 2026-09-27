@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { getTeamTheme } from '../brand';
 
 interface PlayerData {
   name: string;
@@ -14,6 +15,7 @@ export default function PlayerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'seasons' | 'games'>('seasons');
+  const theme = getTeamTheme(teamId);
 
   useEffect(() => {
     if (!playerId) return;
@@ -26,9 +28,9 @@ export default function PlayerPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white w-full overflow-x-hidden">
-      <div className="bg-gray-900 border-b border-gray-800 px-4 py-4">
+      <div className={`${theme.headerClass} px-4 py-4`}>
         <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <Link to={`/${teamId}`} className="text-gray-400 hover:text-white text-sm shrink-0">
+          <Link to={`/${teamId}`} className={`${theme.subtitleClass} hover:text-white text-sm shrink-0`}>
             ← Back
           </Link>
           <div>
@@ -54,7 +56,7 @@ export default function PlayerPage() {
                 onClick={() => setTab(t)}
                 className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap capitalize ${
                   tab === t
-                    ? 'border-blue-500 text-blue-400'
+                    ? theme.tabActiveClass
                     : 'border-transparent text-gray-400 hover:text-gray-200'
                 }`}
               >
