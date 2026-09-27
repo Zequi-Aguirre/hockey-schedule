@@ -35,7 +35,7 @@ const OG_BRANDED = {
     name: 'Pompano Beach Hookers',
     title: 'Pompano Beach Hookers - Schedule & Next Game',
     description: 'Next game, full schedule, and stats for the Pompano Beach Hookers.',
-    image: '/hookers-og.jpg',
+    image: '/og/hookers-card.jpg',
     imageW: 1200,
     imageH: 630,
   },
