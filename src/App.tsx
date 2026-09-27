@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import TeamHome from './pages/TeamHome';
 import TeamPage from './pages/TeamPage';
 import LandingPage from './pages/LandingPage';
 import GamePage from './pages/GamePage';
@@ -21,7 +22,8 @@ export default function App() {
           />
         ))}
 
-        <Route path="/:teamId" element={<TeamPage />} />
+        <Route path="/:teamId" element={<TeamHome />} />
+        <Route path="/:teamId/schedule" element={<TeamPage />} />
         <Route path="/:teamId/game/:gameId" element={<GamePage />} />
         <Route path="/:teamId/player/:playerId" element={<PlayerPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

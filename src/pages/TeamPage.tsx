@@ -1,64 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import ScheduleTable from '../components/ScheduleTable';
 import PlayerStats from '../components/PlayerStats';
 import GoalieStats from '../components/GoalieStats';
 import TeamStats from '../components/TeamStats';
 import { getBrandByTeamId, getTeamTheme, DEFAULT_LEAGUE, DEFAULT_SEASON } from '../brand';
+import { useSchedule } from '../useSchedule';
 
 type Tab = 'schedule' | 'players' | 'goalies' | 'team';
-
-interface ScheduleData {
-  teamName: string;
-  games: Game[];
-  players: Record<string, string>[];
-  goalies: Record<string, string>[];
-  teamStats: Record<string, string>;
-}
-
-export interface Game {
-  gameId: string;
-  gameNumber: string;
-  date: string;
-  time: string;
-  rink: string;
-  league: string;
-  level: string;
-  awayTeam: string;
-  awayGoals: string;
-  homeTeam: string;
-  homeGoals: string;
-  type: string;
-  scoresheetUrl: string | null;
-  hasScoresheet: boolean;
-}
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const [searchParams] = useSearchParams();
-  const [data, setData] = useState<ScheduleData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('schedule');
 
   const brand = getBrandByTeamId(teamId);
   const theme = getTeamTheme(teamId);
   const season = searchParams.get('season') || brand?.season || DEFAULT_SEASON;
   const league = searchParams.get('league') || brand?.league || DEFAULT_LEAGUE;
+  const query = `?league=${league}&season=${season}`;
 
-  useEffect(() => {
-    if (!teamId) return;
-    setLoading(true);
-    setError(null);
-
-    fetch(`/api/schedule?team=${teamId}&season=${season}&league=${league}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Error ${res.status}`);
-        return res.json();
-      })
-      .then((json) => { setData(json); setLoading(false); })
-      .catch((err) => { setError(err.message); setLoading(false); });
-  }, [teamId, season, league]);
+  const { data, loading, error } = useSchedule(teamId, season, league);
 
   // Branded teams show their given name; everyone else shows the scraped name.
   const displayName = brand?.name || (loading ? `Team ${teamId}` : (data?.teamName || `Team ${teamId}`));
@@ -79,10 +41,10 @@ export default function TeamPage() {
       <div className={`${theme.headerClass} px-4 py-4 w-full`}>
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <Link
-            to="/"
+            to={`/${teamId}${query}`}
             className={`${theme.subtitleClass} hover:text-white transition-colors text-sm shrink-0`}
           >
-            ← Teams
+            ← Back
           </Link>
           {brand ? (
             <img

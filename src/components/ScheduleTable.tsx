@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { Game } from '../pages/TeamPage';
+import type { Game } from '../useSchedule';
 import type { TeamTheme } from '../brand';
 
 interface Props {
