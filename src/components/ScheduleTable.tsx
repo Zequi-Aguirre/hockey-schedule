@@ -1,19 +1,22 @@
 import { Link } from 'react-router-dom';
-import type { Game } from '../pages/TeamPage';
+import type { Game } from '../useSchedule';
+import type { TeamTheme } from '../brand';
 
 interface Props {
   games: Game[];
   teamName: string;
   teamId: string;
+  theme: TeamTheme;
 }
 
-export default function ScheduleTable({ games, teamName, teamId }: Props) {
+export default function ScheduleTable({ games, teamName, teamId, theme }: Props) {
   if (games.length === 0) {
     return <p className="text-gray-400 py-8 text-center">No games found.</p>;
   }
 
   const played = games.filter((g) => g.awayGoals !== '' && g.homeGoals !== '');
   const upcoming = games.filter((g) => !g.awayGoals && !g.homeGoals);
+  const nextGame = upcoming[0];
 
   const wins = played.filter((g) => {
     const isHome = g.homeTeam === teamName;
@@ -24,8 +27,38 @@ export default function ScheduleTable({ games, teamName, teamId }: Props) {
 
   const losses = played.length - wins;
 
+  function opponentOf(g: Game) {
+    return g.homeTeam === teamName ? g.awayTeam : g.homeTeam;
+  }
+
   return (
     <div className="space-y-4">
+      {/* Up Next — hero card (Team/Plus style) */}
+      {nextGame ? (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className={`text-xs font-bold px-2 py-1 rounded ${theme.chipClass}`}>UP NEXT</span>
+            <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+              nextGame.homeTeam === teamName ? 'bg-gray-700 text-gray-200' : 'bg-gray-800 text-gray-400'
+            }`}>
+              {nextGame.homeTeam === teamName ? 'HOME' : 'AWAY'}
+            </span>
+          </div>
+          <div className="text-xl font-bold text-white truncate">vs {opponentOf(nextGame)}</div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-300">
+            <span>📅 {nextGame.date}</span>
+            {nextGame.time && <span>🕐 {nextGame.time}</span>}
+            {nextGame.rink && <span className="truncate">📍 {nextGame.rink}</span>}
+          </div>
+        </div>
+      ) : (
+        played.length > 0 && (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center text-gray-400 text-sm">
+            Season complete — no upcoming games.
+          </div>
+        )
+      )}
+
       {/* Record summary */}
       {played.length > 0 && (
         <div className="flex gap-3 flex-wrap">
@@ -60,7 +93,7 @@ export default function ScheduleTable({ games, teamName, teamId }: Props) {
                 {isPlayed && game.gameId ? (
                   <Link
                     to={`/${teamId}/game/${game.gameId}`}
-                    className="text-blue-400 hover:text-blue-300 text-xs w-8 text-center shrink-0 font-mono"
+                    className={`${theme.accentText} hover:opacity-80 text-xs w-8 text-center shrink-0 font-mono`}
                   >
                     {game.gameNumber}
                   </Link>
@@ -72,7 +105,7 @@ export default function ScheduleTable({ games, teamName, teamId }: Props) {
 
                 {/* HOME/AWAY badge */}
                 <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${
-                  isHome ? 'bg-blue-900/50 text-blue-300' : 'bg-gray-700 text-gray-300'
+                  isHome ? 'bg-gray-700 text-gray-200' : 'bg-gray-800 text-gray-400'
                 }`}>
                   {isHome ? 'HOME' : 'AWAY'}
                 </span>
@@ -102,7 +135,7 @@ export default function ScheduleTable({ games, teamName, teamId }: Props) {
                     href={`https://stats.panthers.timetoscore.com/${game.scoresheetUrl}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-blue-400 hover:text-blue-300 shrink-0"
+                    className={`${theme.accentText} hover:opacity-80 text-xs shrink-0`}
                   >
                     Sheet
                   </a>

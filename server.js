@@ -382,9 +382,19 @@ function parsePlayer($) {
 }
 
 function parseLeague($, league, season) {
-  const teams = [];
+  const byId = {};   // teamId -> entry (deduped)
+  const order = [];  // preserve first-seen order
   const levels = [];
 
+  function upsert(teamId, fields, level) {
+    if (!teamId) return;
+    if (!byId[teamId]) { byId[teamId] = { _teamId: teamId }; order.push(teamId); }
+    const entry = byId[teamId];
+    Object.entries(fields).forEach(([k, v]) => { if (v && !entry[k]) entry[k] = v; });
+    if (level && !entry._level) entry._level = level;
+  }
+
+  // 1) Standings-style tables (league pages that list W/L/T/Pts per team).
   $('table').each((_, table) => {
     const rows = $(table).find('tr');
     if (rows.length < 2) return;
@@ -401,15 +411,23 @@ function parseLeague($, league, season) {
         const entry = {};
         headers.forEach((h, i) => { entry[h] = clean($(cells[i])?.text() || ''); });
         const teamId = $(cells[0]).find('a').attr('href')?.match(/team=(\d+)/)?.[1] || null;
-        if (teamId) entry._teamId = teamId;
-        const levelLabel = titleText;
-        entry._level = levelLabel;
-        if (Object.values(entry).some(v => v && !v.startsWith('_'))) teams.push(entry);
+        if (teamId) upsert(teamId, entry, titleText);
       });
 
       if (!levels.includes(titleText) && titleText) levels.push(titleText);
     }
   });
 
+  // 2) Fallback / supplement: many league pages (e.g. BH Adult) are a big
+  //    schedule grid with no standings table. Harvest every distinct team from
+  //    its "display-schedule?team=N" links so the finder still lists real teams.
+  $('a[href*="display-schedule?team="]').each((_, a) => {
+    const href = $(a).attr('href') || '';
+    const teamId = href.match(/team=(\d+)/)?.[1];
+    const name = clean($(a).text());
+    if (teamId && name) upsert(teamId, { name });
+  });
+
+  const teams = order.map((id) => byId[id]).filter((t) => t.name || Object.keys(t).some((k) => !k.startsWith('_')));
   return { league, season, levels, teams };
 }
