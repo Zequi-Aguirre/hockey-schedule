@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import TeamHome from './pages/TeamHome';
 import TeamPage from './pages/TeamPage';
-import LandingPage from './pages/LandingPage';
+import RinkPicker from './pages/RinkPicker';
+import LeaguePage from './pages/LeaguePage';
 import GamePage from './pages/GamePage';
 import PlayerPage from './pages/PlayerPage';
 import { FEATURED_TEAMS } from './brand';
@@ -10,7 +11,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<RinkPicker />} />
+        <Route path="/league/:leagueId" element={<LeaguePage />} />
 
         {/* Friendly aliases for branded teams (e.g. /hookers). Static paths, so
             they resolve ahead of the generic /:teamId route. Stable links to pin. */}

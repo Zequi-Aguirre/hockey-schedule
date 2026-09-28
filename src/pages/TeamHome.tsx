@@ -39,8 +39,8 @@ export default function TeamHome() {
       {/* Header */}
       <div className={`${theme.headerClass} px-4 py-4 w-full`}>
         <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <Link to="/" className={`${theme.subtitleClass} hover:text-white transition-colors text-sm shrink-0`}>
-            ← Teams
+          <Link to={`/league/${league}`} className={`${theme.subtitleClass} hover:text-white transition-colors text-sm shrink-0`}>
+            ← Standings
           </Link>
           {brand ? (
             <img

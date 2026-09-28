@@ -71,6 +71,24 @@ export const TEAMS: Record<string, TeamBrand> = {
 /** Branded teams, for the landing page's featured section. */
 export const FEATURED_TEAMS = Object.values(TEAMS);
 
+// Rinks = the two league homes. The root page is a rink picker; each rink
+// opens its league's division-grouped standings.
+export interface Rink {
+  name: string;      // rink display name
+  league: string;    // timetoscore league id
+  blurb: string;     // short subtitle
+  emoji: string;
+}
+
+export const RINKS: Rink[] = [
+  { name: 'Panthers IceDen', league: '1', blurb: 'IceDen Adult League · standings & schedules', emoji: '🏒' },
+  { name: 'Baptist IcePlex', league: '4', blurb: 'BH Adult League · standings & schedules', emoji: '🏟️' },
+];
+
+export function getRinkByLeague(league: string | undefined): Rink | undefined {
+  return RINKS.find((r) => r.league === league);
+}
+
 /** Look up a branded team by its timetoscore team id. */
 export function getBrandByTeamId(teamId: string | undefined): TeamBrand | undefined {
   if (!teamId) return undefined;
