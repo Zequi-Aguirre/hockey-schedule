@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { Game } from '../useSchedule';
 import type { TeamTheme } from '../brand';
 
@@ -10,6 +10,8 @@ interface Props {
 }
 
 export default function ScheduleTable({ games, teamName, teamId, theme }: Props) {
+  const navigate = useNavigate();
+
   if (games.length === 0) {
     return <p className="text-gray-400 py-8 text-center">No games found.</p>;
   }
@@ -80,23 +82,36 @@ export default function ScheduleTable({ games, teamName, teamId, theme }: Props)
           const won = isPlayed && ourGoals > theirGoals;
           const lost = isPlayed && ourGoals < theirGoals;
 
+          // Whole row navigates to the same game-details route the number used to link to.
+          const target = game.gameId ? `/${teamId}/game/${game.gameId}` : null;
+
           return (
             <div
               key={index}
-              className={`bg-gray-900 rounded-lg px-3 py-3 border ${
+              role={target ? 'link' : undefined}
+              tabIndex={target ? 0 : undefined}
+              onClick={target ? () => navigate(target) : undefined}
+              onKeyDown={
+                target
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(target);
+                      }
+                    }
+                  : undefined
+              }
+              className={`bg-gray-900 rounded-lg px-3 py-3 border transition-colors ${
                 won ? 'border-green-800/50' : lost ? 'border-red-800/50' : 'border-gray-800'
-              }`}
+              } ${target ? 'cursor-pointer hover:bg-gray-800/50' : ''}`}
             >
               {/* Top row: # | badge | opponent | score | sheet */}
               <div className="flex items-center gap-2">
-                {/* Game number */}
+                {/* Game number — styled text; the whole row handles navigation now */}
                 {isPlayed && game.gameId ? (
-                  <Link
-                    to={`/${teamId}/game/${game.gameId}`}
-                    className={`${theme.accentText} hover:opacity-80 text-xs w-8 text-center shrink-0 font-mono`}
-                  >
+                  <span className={`${theme.accentText} text-xs w-8 text-center shrink-0 font-mono`}>
                     {game.gameNumber}
-                  </Link>
+                  </span>
                 ) : (
                   <div className="text-gray-600 text-xs w-8 text-center shrink-0 font-mono">
                     {game.gameNumber}
@@ -135,6 +150,7 @@ export default function ScheduleTable({ games, teamName, teamId, theme }: Props)
                     href={`https://stats.panthers.timetoscore.com/${game.scoresheetUrl}`}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className={`${theme.accentText} hover:opacity-80 text-xs shrink-0`}
                   >
                     Sheet
