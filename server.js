@@ -102,7 +102,9 @@ app.get('/api/league', async (req, res) => {
     const html = await fetchHtml(`${ROOT}/display-stats.php?league=${league}&season=${season}`);
     const $ = cheerio.load(html);
     res.setHeader('Cache-Control', 'public, max-age=3600');
-    return res.json(parseLeague($, league, season));
+    const data = parseLeague($, league, season);
+    data.divisions = parseDivisions($);
+    return res.json(data);
   } catch (err) {
     return res.status(502).json({ error: err.message });
   }
@@ -585,4 +587,57 @@ function parseLeague($, league, season) {
 
   const teams = order.map((id) => byId[id]).filter((t) => t.name || Object.keys(t).some((k) => !k.startsWith('_')));
   return { league, season, levels, teams };
+}
+
+// Parse the display-stats.php page into per-division standings, mirroring the
+// site's own layout. The page is one big table where each division section is:
+//   <tr><th>{Division} Schedule</th></tr>        (label; league-wide row too)
+//   ...optional "Division Player Stats"/"Playoff Tree" label rows...
+//   <tr><th></th><th>Team</th><th>GP</th>...      (standings header)
+//   <tr><td>1</td><td><a team=..>Name</a></td>... (team rows)
+// The most recent "... Schedule" label before a standings header names that
+// division; the league-wide "ID Adult"/"BH Adult" row is overridden by the
+// first real division label, so it never becomes a division.
+function parseDivisions($) {
+  const divisions = [];
+  let pendingLabel = null;   // last seen "... Schedule" label
+  let current = null;        // division currently collecting team rows
+  let headers = null;        // header cells of the current standings table
+
+  $('table').first().find('tr').each((_, tr) => {
+    const ths = $(tr).find('th');
+    const tds = $(tr).find('td');
+
+    // Section label row: a lone <th> ending in "Schedule".
+    if (ths.length === 1 && tds.length === 0) {
+      const txt = clean($(ths[0]).text());
+      if (/schedule$/i.test(txt)) pendingLabel = txt.replace(/\s*schedule$/i, '').trim();
+      return;
+    }
+
+    // Standings header row: <th> cells including Team + GP → starts a division.
+    if (ths.length >= 3) {
+      const cols = ths.map((_i, th) => clean($(th).text())).get();
+      if (cols.includes('Team') && cols.includes('GP')) {
+        headers = cols;                       // e.g. ['', 'Team', 'GP', 'W', ...]
+        current = { name: pendingLabel || 'Division', columns: cols.slice(2), teams: [] };
+        divisions.push(current);
+      }
+      return;
+    }
+
+    // Team row: <td> cells belonging to the current division.
+    if (current && headers && tds.length >= 3) {
+      const vals = tds.map((_i, td) => clean($(td).text())).get();
+      const teamId = $(tds[1]).find('a').attr('href')?.match(/team=(\d+)/)?.[1]
+        || $(tds[0]).find('a').attr('href')?.match(/team=(\d+)/)?.[1] || null;
+      const name = vals[1];
+      if (!name) return;
+      const stats = {};
+      headers.slice(2).forEach((h, i) => { stats[h] = vals[i + 2] ?? ''; });
+      current.teams.push({ rank: vals[0], name, teamId, stats });
+    }
+  });
+
+  return divisions;
 }
